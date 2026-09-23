@@ -15,6 +15,7 @@
       --red: #a43f42;
       --amber: #aa7a24;
       --violet: #665c93;
+      --green: #2f7d4f;
     }
     * { box-sizing: border-box; }
     body { margin: 0; background: var(--bg); color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
@@ -30,6 +31,8 @@
     button.warn { background: var(--amber); }
     button.danger { background: var(--red); }
     button.violet { background: var(--violet); }
+    button.green { background: var(--green); }
+    button.btn-sm { min-height: 28px; padding: 4px 10px; font-size: 12px; }
     label { display: grid; gap: 5px; font-size: 12px; color: var(--muted); }
     .top { display: grid; grid-template-columns: 360px 1fr; gap: 18px; align-items: start; }
     .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; }
@@ -42,19 +45,48 @@
     .mini h3 { margin: 0 0 8px; font-size: 14px; }
     .item { border: 1px solid #d7e0dc; border-left: 4px solid var(--teal); background: #fff; border-radius: 7px; padding: 9px; margin-bottom: 8px; cursor: pointer; }
     .item.overdue { border-left-color: var(--red); }
+    .item.s-pending { border-left-color: var(--teal); }
+    .item.s-repair { border-left-color: var(--amber); }
+    .item.s-done { border-left-color: var(--green); }
     .board { display: grid; grid-template-columns: repeat(4, minmax(185px, 1fr)); gap: 12px; overflow-x: auto; }
+    .board3 { display: grid; grid-template-columns: repeat(3, minmax(230px, 1fr)); gap: 12px; }
     .col { background: #f9fbf9; border: 1px solid var(--line); border-radius: 8px; padding: 10px; min-height: 320px; }
     .col h3 { display: flex; justify-content: space-between; margin: 0 0 10px; font-size: 15px; }
     .actions { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 8px; }
     .actions button { flex: 1; min-width: 82px; font-size: 12px; padding: 7px 8px; }
-    dialog { border: 1px solid var(--line); border-radius: 8px; width: min(560px, calc(100vw - 24px)); padding: 0; }
+    dialog { border: 1px solid var(--line); border-radius: 8px; width: min(620px, calc(100vw - 24px)); padding: 0; }
     dialog::backdrop { background: rgba(0, 0, 0, 0.3); }
-    .dialog-body { padding: 16px; display: grid; gap: 10px; }
+    .dialog-body { padding: 16px; display: grid; gap: 12px; max-height: 86vh; overflow-y: auto; }
+    .dialog-body h2 { margin: 0; font-size: 18px; }
+    .dsec { border: 1px solid var(--line); border-radius: 7px; padding: 10px 12px; background: #fbfdfb; display: grid; gap: 8px; }
+    .dhead { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .dhead h3 { margin: 0; font-size: 14px; }
     .empty { color: var(--muted); font-size: 13px; padding: 8px 0; }
+    .inline { display: flex; gap: 8px; align-items: center; }
+    .inline select { width: 96px; flex: none; }
+    .badge { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+    .b-pending { background: #e2f0ef; color: var(--teal); }
+    .b-repair { background: #f6ecd8; color: var(--amber); }
+    .b-done { background: #e2f1e7; color: var(--green); }
+    .b-void { background: #ece8f2; color: var(--violet); }
+    .chip { display: inline-block; padding: 1px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; margin-right: 4px; }
+    .chip.c-broken { background: #f3dddd; color: var(--red); }
+    .chip.c-lift { background: #f6ecd8; color: var(--amber); }
+    .chip.done { opacity: 0.55; }
+    .chip-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: 3px 0; }
+    .reasons { margin: 0; padding-left: 18px; font-size: 13px; color: var(--amber); }
+    .hist { margin: 0; padding-left: 16px; font-size: 12.5px; }
+    .hist li { margin-bottom: 4px; }
+    .hint { font-size: 12px; color: var(--muted); }
+    .queue-no { color: var(--violet); font-weight: 600; }
+    #toast { position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%) translateY(12px); background: #243028; color: #fff; padding: 10px 16px; border-radius: 7px; font-size: 13.5px; max-width: min(560px, 92vw); opacity: 0; pointer-events: none; transition: opacity .18s, transform .18s; white-space: pre-line; z-index: 10; }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    #toast.warn { background: var(--amber); }
+    #toast.bad { background: var(--red); }
     @media (max-width: 980px) {
       header { display: block; padding: 18px; }
       main { padding: 16px; }
-      .top, .lists, .toolbar { grid-template-columns: 1fr; }
+      .top, .lists, .toolbar, .board3 { grid-template-columns: 1fr; }
       .grid2 { grid-template-columns: 1fr; }
     }
   </style>
@@ -63,7 +95,7 @@
   <header>
     <div>
       <h1>小型漆线雕工坊管理</h1>
-      <div class="sub">贴线、阴干、上金粉、待交付的作品流转与缺陷追踪</div>
+      <div class="sub">贴线、阴干、上金粉、待交付的作品流转 · 客户验稿签收与作废履历</div>
     </div>
     <button id="exportBtn" class="secondary">导出 JSON</button>
   </header>
@@ -88,7 +120,6 @@
           <label>金粉处理状态<select name="gold"><option>未处理</option><option>试扫粉</option><option>已上金粉</option></select></label>
           <label>当前状态<select name="status"><option>贴线中</option><option>待阴干</option><option>上金粉</option><option>待交付</option></select></label>
         </div>
-        <label>缺陷位置<input name="defect" placeholder="右下花瓣断线"></label>
         <label>备注<textarea name="note" placeholder="客户偏好、修补记录"></textarea></label>
         <button type="submit">加入工坊</button>
       </form>
@@ -118,172 +149,41 @@
         <div id="board" class="board"></div>
       </section>
     </section>
+
+    <section class="panel">
+      <h2>客户验稿看板</h2>
+      <div class="toolbar" style="grid-template-columns: 1fr 1fr auto;">
+        <label>筛选客户 / 纹样 / 胎体<input id="inspectFilter" placeholder="例如：林女士、缠枝"></label>
+        <div class="hint" style="display:flex;align-items:flex-end;padding-bottom:9px;">每件作品至多一张未结束验稿单；进度满且无断线翘线方可签收。</div>
+        <button id="inspectClear" class="secondary" style="align-self:end;">清空筛选</button>
+      </div>
+      <div id="inspectionBoard" class="board3"></div>
+    </section>
   </main>
 
   <dialog id="detailDialog">
     <div class="dialog-body">
       <h2 id="detailTitle">作品详情</h2>
-      <div id="detailContent" class="meta"></div>
-      <label>记录缺陷
-        <input id="defectInput" placeholder="断线/翘线位置">
-      </label>
+      <div id="detailWork"></div>
+      <div id="detailDefects"></div>
+      <div id="detailInspection"></div>
+      <details class="dsec">
+        <summary class="dhead" style="cursor:pointer;"><h3>作品履历（含旧签字）</h3></summary>
+        <ul id="detailHistory" class="hist meta"></ul>
+      </details>
       <div class="actions">
-        <button id="saveDefect" class="warn">保存缺陷</button>
         <button id="closeDialog" class="secondary">关闭</button>
       </div>
     </div>
   </dialog>
 
-  <script>
-    const statuses = ["贴线中", "待阴干", "上金粉", "待交付"];
-    const storageKey = "zfl42Works";
-    const today = new Date().toISOString().slice(0, 10);
-    const seed = [
-      { id: crypto.randomUUID(), base: "木胎香盒", theme: "海水江崖", line: "细线", progress: 70, dryDate: today, gold: "未处理", defect: "", delivery: "2026-06-26", status: "待阴干", note: "边线需保持低浮雕感", logs: ["创建作品"] },
-      { id: crypto.randomUUID(), base: "脱胎盘", theme: "折枝梅", line: "混合线", progress: 95, dryDate: "2026-06-20", gold: "试扫粉", defect: "左侧枝干翘线", delivery: "2026-06-23", status: "上金粉", note: "客户要求金粉偏暗", logs: ["创建作品", "记录翘线"] },
-      { id: crypto.randomUUID(), base: "竹胎笔筒", theme: "云雷纹", line: "中线", progress: 40, dryDate: "2026-06-24", gold: "未处理", defect: "", delivery: "2026-06-30", status: "贴线中", note: "", logs: ["创建作品"] }
-    ];
-    let works = JSON.parse(localStorage.getItem(storageKey) || "null") || seed;
-    let activeId = null;
+  <div id="toast"></div>
 
-    const form = document.querySelector("#workForm");
-    const board = document.querySelector("#board");
-    const statusFilter = document.querySelector("#statusFilter");
-    const themeFilter = document.querySelector("#themeFilter");
-    const sortMode = document.querySelector("#sortMode");
-    const dialog = document.querySelector("#detailDialog");
-
-    form.dryDate.value = today;
-    form.delivery.value = new Date(Date.now() + 5 * 86400000).toISOString().slice(0, 10);
-    statusFilter.innerHTML = `<option value="">全部状态</option>` + statuses.map(s => `<option>${s}</option>`).join("");
-
-    function save() {
-      localStorage.setItem(storageKey, JSON.stringify(works));
-    }
-
-    function filtered() {
-      return works
-        .filter(w => !statusFilter.value || w.status === statusFilter.value)
-        .filter(w => !themeFilter.value || w.theme.includes(themeFilter.value.trim()))
-        .sort((a, b) => (a[sortMode.value] || "").localeCompare(b[sortMode.value] || ""));
-    }
-
-    function updateStatus(id, status) {
-      const work = works.find(w => w.id === id);
-      work.status = status;
-      if (status === "待阴干") work.dryDate = new Date().toISOString().slice(0, 10);
-      if (status === "上金粉") work.gold = "已上金粉";
-      if (status === "待交付") work.progress = 100;
-      work.logs.push(`${new Date().toLocaleString()} 更新为 ${status}`);
-      save();
-      render();
-    }
-
-    function recordDefect(id, text) {
-      const work = works.find(w => w.id === id);
-      const value = text || prompt("输入断线/翘线位置");
-      if (!value) return;
-      work.defect = work.defect ? `${work.defect}; ${value}` : value;
-      work.logs.push(`${new Date().toLocaleString()} 缺陷：${value}`);
-      save();
-      render();
-    }
-
-    function showDetail(id) {
-      activeId = id;
-      const w = works.find(item => item.id === id);
-      document.querySelector("#detailTitle").textContent = `${w.theme} · ${w.base}`;
-      document.querySelector("#detailContent").innerHTML = `
-        胎体材质：${w.base}<br>线条粗细：${w.line}<br>贴线进度：${w.progress}%<br>
-        阴干日期：${w.dryDate}<br>金粉状态：${w.gold}<br>缺陷位置：${w.defect || "无"}<br>
-        交付日期：${w.delivery}<br>当前状态：${w.status}<br>备注：${w.note || "无"}<br>
-        流转记录：${w.logs.join(" / ")}
-      `;
-      document.querySelector("#defectInput").value = "";
-      dialog.showModal();
-    }
-
-    function renderSummaries() {
-      const todayDry = works.filter(w => w.dryDate <= today && w.status === "待阴干");
-      const defects = works.filter(w => w.defect);
-      const delivery = [...works].sort((a, b) => a.delivery.localeCompare(b.delivery)).slice(0, 4);
-      document.querySelector("#todayDry").innerHTML = todayDry.length ? todayDry.map(w => `<div class="item" onclick="showDetail('${w.id}')"><b>${w.theme}</b><div class="meta">${w.base} · ${w.dryDate}</div></div>`).join("") : `<div class="empty">暂无</div>`;
-      document.querySelector("#defectList").innerHTML = defects.length ? defects.map(w => `<div class="item overdue" onclick="showDetail('${w.id}')"><b>${w.theme}</b><div class="meta">${w.defect}</div></div>`).join("") : `<div class="empty">暂无</div>`;
-      document.querySelector("#deliveryList").innerHTML = delivery.map(w => `<div class="item" onclick="showDetail('${w.id}')"><b>${w.theme}</b><div class="meta">${w.delivery} · ${w.status}</div></div>`).join("");
-    }
-
-    function renderBoard() {
-      const list = filtered();
-      board.innerHTML = statuses.map(status => {
-        const cards = list.filter(w => w.status === status);
-        return `<section class="col">
-          <h3><span>${status}</span><span>${cards.length}</span></h3>
-          ${cards.length ? cards.map(w => `<article class="item ${w.defect ? "overdue" : ""}" onclick="showDetail('${w.id}')">
-            <b>${w.theme}</b>
-            <div class="meta">${w.base} · ${w.line}<br>进度 ${w.progress}% · 阴干 ${w.dryDate}<br>金粉：${w.gold} · 交付：${w.delivery}<br>${w.defect ? "缺陷：" + w.defect : "缺陷：无"}</div>
-            <div class="actions" onclick="event.stopPropagation()">
-              ${statuses.map(s => `<button class="${s === status ? "secondary" : ""}" onclick="updateStatus('${w.id}', '${s}')">${s}</button>`).join("")}
-              <button class="warn" onclick="recordDefect('${w.id}')">记缺陷</button>
-            </div>
-          </article>`).join("") : `<div class="empty">暂无作品</div>`}
-        </section>`;
-      }).join("");
-    }
-
-    function render() {
-      renderSummaries();
-      renderBoard();
-    }
-
-    form.addEventListener("submit", event => {
-      event.preventDefault();
-      const data = Object.fromEntries(new FormData(form).entries());
-      works.unshift({
-        id: crypto.randomUUID(),
-        base: data.base,
-        theme: data.theme,
-        line: data.line,
-        progress: Number(data.progress),
-        dryDate: data.dryDate,
-        gold: data.gold,
-        defect: data.defect,
-        delivery: data.delivery,
-        status: data.status,
-        note: data.note,
-        logs: [`${new Date().toLocaleString()} 创建作品`]
-      });
-      form.reset();
-      form.dryDate.value = today;
-      form.delivery.value = new Date(Date.now() + 5 * 86400000).toISOString().slice(0, 10);
-      save();
-      render();
-    });
-
-    document.querySelector("#saveDefect").addEventListener("click", () => {
-      recordDefect(activeId, document.querySelector("#defectInput").value.trim());
-      showDetail(activeId);
-    });
-    document.querySelector("#closeDialog").addEventListener("click", () => dialog.close());
-    document.querySelector("#clearFilters").addEventListener("click", () => {
-      themeFilter.value = "";
-      statusFilter.value = "";
-      render();
-    });
-    [statusFilter, themeFilter, sortMode].forEach(el => el.addEventListener("input", render));
-    document.querySelector("#exportBtn").addEventListener("click", () => {
-      const blob = new Blob([JSON.stringify(works, null, 2)], { type: "application/json" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = "lacquer-thread-works.json";
-      link.click();
-      URL.revokeObjectURL(link.href);
-    });
-
-    window.updateStatus = updateStatus;
-    window.recordDefect = recordDefect;
-    window.showDetail = showDetail;
-    save();
-    render();
-  </script>
+  <!-- 作品数据层：localStorage 持久化与作品/缺陷增改 -->
+  <script src="js/store.js"></script>
+  <!-- 验稿判定层：验稿单生命周期、签收判定、签字作废规则（纯业务规则，不碰 DOM） -->
+  <script src="js/inspection.js"></script>
+  <!-- 页面操作层：渲染、事件、看板 -->
+  <script src="js/app.js"></script>
 </body>
 </html>
